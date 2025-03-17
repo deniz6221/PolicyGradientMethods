@@ -1,7 +1,7 @@
 import torch
 import torchvision.transforms as transforms
 import numpy as np
-
+import json
 import environment
 from agent import Agent
 
@@ -174,6 +174,11 @@ if __name__ == "__main__":
         print(f"Episode={i}, reward={cumulative_reward}")
         rews.append(cumulative_reward)
         agent.update_model()
+
+        if i % 2 == 0:
+            torch.save({"model": agent.model.state_dict(), "optim": agent.optimizer.state_dict()}, f"checkpoints/checkpoint_{i}.pth")
+            with open(f"checkpoints/rewjson_{i}.json", "w") as rjson:
+                rjson.write(json.dumps(rews))
 
     ## Save the model and the training statistics
     torch.save(agent.model.state_dict(), "model.pt")
