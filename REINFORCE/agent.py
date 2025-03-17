@@ -17,7 +17,7 @@ class Agent():
         self.log_probs = []
         
     def decide_action(self, state):
-        
+        print(f"state: {state}")
         action_mean, act_std = self.model(state).chunk(2, dim=-1)
         action_std = F.softplus(act_std) + 5e-2  # increase variance to stimulate exploration
         dist = Normal(loc=action_mean, scale=action_std)
@@ -29,18 +29,23 @@ class Agent():
     def update_model(self):
         if not self.rewards:
             return
+        
+        loss_lst = []
         returns = []
         Rt = 0
 
         for r in reversed(self.rewards):
-            Rt = r + self.gamma * Rt
+            Rt = r + gamma * Rt
             returns.insert(0, Rt)
 
         returns = torch.tensor(returns, dtype=torch.float32)
         returns = (returns - returns.mean()) / (returns.std() + 1e-8)  
 
-        policy_loss = torch.stack(self.log_probs) * returns.detach()
-        loss = -policy_loss.mean()
+        
+        for i in range(len(returns)):
+            loss_lst.append(self.log_probs[i]*returns[i])
+
+        loss = torch.cat(loss_lst).sum()    
         
         self.optimizer.zero_grad()
         loss.backward()

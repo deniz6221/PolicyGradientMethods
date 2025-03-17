@@ -146,7 +146,7 @@ class Hw3Env(environment.BaseEnv):
 
 
 if __name__ == "__main__":
-    env = Hw3Env(render_mode="offscreen")
+    env = Hw3Env(render_mode="none")
     agent = Agent()
     num_episodes = 10000
 
@@ -155,6 +155,7 @@ if __name__ == "__main__":
     for i in range(num_episodes):        
         env.reset()
         state = env.high_level_state()
+        state = torch.tensor(state, dtype=torch.float32)
         done = False
         cumulative_reward = 0.0
         episode_steps = 0
@@ -162,6 +163,7 @@ if __name__ == "__main__":
         while not done:
             action = agent.decide_action(state)
             next_state, reward, is_terminal, is_truncated = env.step(action[0])
+            next_state = torch.tensor(next_state, dtype=torch.float32)
             agent.add_reward(reward)
             cumulative_reward += reward
             done = is_terminal or is_truncated
