@@ -27,26 +27,28 @@ class Agent():
         return action
     
     def update_model(self):
-        step_count = len(self.rewards)
-        if step_count == 0:
+        if not self.rewards:
             return
-        
-        Rt = self.rewards[-1]
-        exp_return = Rt* self.log_probs[-1]
+        returns = []
+        Rt = 0
 
-        for i in range(step_count - 2, -1):
-            Rt = self.rewards[i] + Rt * gamma
-            exp_return += Rt* self.log_probs[i]
+        for r in reversed(self.rewards):
+            Rt = r + self.gamma * Rt
+            returns.insert(0, Rt)
+
+        returns = torch.tensor(returns, dtype=torch.float32)
+        returns = (returns - returns.mean()) / (returns.std() + 1e-8)  
+
+        policy_loss = torch.stack(self.log_probs) * returns.detach()
+        loss = -policy_loss.mean()
         
-        loss = -exp_return
         self.optimizer.zero_grad()
-        loss.backwards()
-        self.optimizer.step() 
+        loss.backward()
+        self.optimizer.step()
 
+        # Clear memory
         self.rewards.clear()
         self.log_probs.clear()
-
-        return
 
     def add_reward(self, reward):
         self.rewards.append(reward)
