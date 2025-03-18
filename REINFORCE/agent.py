@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.distributions import Normal
 
 gamma = 0.99
-learning_rate = 0.001
+learning_rate = 0.01
 
 class Agent():
     def __init__(self):
@@ -17,12 +17,11 @@ class Agent():
         self.log_probs = []
         
     def decide_action(self, state):
-        print(f"state: {state}")
         action_mean, act_std = self.model(state).chunk(2, dim=-1)
         action_std = F.softplus(act_std) + 5e-2  # increase variance to stimulate exploration
         dist = Normal(loc=action_mean, scale=action_std)
         action = dist.sample()
-        prob = dist.log_prob(action)
+        prob = dist.log_prob(action).sum(-1).unsqueeze(-1)
         self.log_probs.append(prob)
         return action
     
@@ -43,17 +42,17 @@ class Agent():
 
         
         for i in range(len(returns)):
-            loss_lst.append(self.log_probs[i]*returns[i])
+            loss_lst.append(-self.log_probs[i]*returns[i])
 
-        loss = torch.cat(loss_lst).sum()    
         
         self.optimizer.zero_grad()
+        loss = torch.cat(loss_lst).sum()    
         loss.backward()
         self.optimizer.step()
 
         # Clear memory
-        self.rewards.clear()
-        self.log_probs.clear()
+        del self.rewards[:]
+        del self.log_probs[:]
 
     def add_reward(self, reward):
         self.rewards.append(reward)

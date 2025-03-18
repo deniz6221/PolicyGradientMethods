@@ -161,7 +161,7 @@ if __name__ == "__main__":
         episode_steps = 0
 
         while not done:
-            action = agent.decide_action(state)
+            action = agent.decide_action(state.clone())
             next_state, reward, is_terminal, is_truncated = env.step(action[0])
             next_state = torch.tensor(next_state, dtype=torch.float32)
             agent.add_reward(reward)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         rews.append(cumulative_reward)
         agent.update_model()
 
-        if i % 2 == 0:
+        if i % 999 == 0:
             torch.save({"model": agent.model.state_dict(), "optim": agent.optimizer.state_dict()}, f"checkpoints/checkpoint_{i}.pth")
             with open(f"checkpoints/rewjson_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
