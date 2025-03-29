@@ -18,10 +18,11 @@ class Agent():
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=1e-4)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=1e-4)
         self.replay_buffer = deque(maxlen=10000)
+        self.alpha = 0.2
         
     def decide_action(self, state):
         action_mean, act_std = self.actor(state).chunk(2, dim=-1)
-        action_std = torch.clamp(act_std, min=-20, max=2)
+        action_std = torch.clamp(act_std, min=-2, max=2)
         action_std = torch.exp(action_std)
 
         dist = torch.distributions.Normal(action_mean, action_std)
@@ -31,7 +32,7 @@ class Agent():
     
     def get_action_with_probs(self, state):
         action_mean, act_std = self.actor(state).chunk(2, dim=-1)
-        action_std = torch.clamp(act_std, min=-20, max=2)
+        action_std = torch.clamp(act_std, min=-2, max=2)
         action_std = torch.exp(action_std)
 
         dist = torch.distributions.Normal(action_mean, action_std)
@@ -51,13 +52,13 @@ class Agent():
         actions = torch.stack(actions)
         rewards = torch.stack(rewards)
         next_states = torch.stack(next_states)
-        dones = torch.stack(dones)
+        dones = torch.tensor(dones, dtype=torch.float32)
 
         # Update critic
         with torch.no_grad():
             next_actions, next_log_probs = self.get_action_with_probs(next_states)
             target_q = self.target_critic(next_states, next_actions)
-            target_q = rewards + (1 - dones) * gamma * (target_q - next_log_probs)
+            target_q = rewards + (1 - dones) * gamma * (target_q + self.alpha * next_log_probs)
         q = self.critic(states, actions)
         critic_loss = F.mse_loss(q, target_q)
         self.critic_optimizer.zero_grad()
@@ -67,7 +68,7 @@ class Agent():
         # Update actor
         actions, log_probs = self.get_action_with_probs(states)
         q = self.critic(states, actions)
-        actor_loss = (log_probs - q).mean()
+        actor_loss = (self.alpha * log_probs - q).mean()
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
@@ -90,6 +91,8 @@ class Agent():
         self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer_state_dict'])
         self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer_state_dict'])
         
-
+    def soft_update(self, tau=0.005):
+        for target_param, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+            target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
     
         

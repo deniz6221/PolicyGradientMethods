@@ -181,8 +181,7 @@ if __name__ == "__main__":
                 agentUpdated = True
             
             if step_counter % target_update_frequency == 0:
-                agent.target_critic.load_state_dict(agent.critic.state_dict())
-                agent.target_critic.eval()
+                agent.soft_update()
                 if agentUpdated:
                     step_counter = 0
             
