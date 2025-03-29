@@ -3,7 +3,7 @@ import numpy as np
 
 import json
 
-file_name = "rewjson_999"
+file_name = "rewjson_4995"
 rps_lst = json.load(open(f"checkpoints/{file_name}.json", "r"))
 
 

@@ -4,6 +4,7 @@ import numpy as np
 
 import environment
 from agent import Agent
+import json
 
 
 class Hw3Env(environment.BaseEnv):
@@ -148,10 +149,14 @@ class Hw3Env(environment.BaseEnv):
 if __name__ == "__main__":
     env = Hw3Env(render_mode="offscreen")
     agent = Agent()
-    num_episodes = 10000
+    num_episodes = 10001
 
     rews = []
 
+    update_frequency = 10
+    target_update_frequency = 200
+
+    step_counter = 0
     for i in range(num_episodes):        
         env.reset()
         state = env.high_level_state()
@@ -162,14 +167,32 @@ if __name__ == "__main__":
         while not done:
             action = agent.decide_action(state)
             next_state, reward, is_terminal, is_truncated = env.step(action[0])
-            agent.add_reward(reward)
+            
             cumulative_reward += reward
             done = is_terminal or is_truncated
+            agent.replay_buffer.append((state, action, reward, next_state, done))
             
             state = next_state
             episode_steps += 1
+            step_counter += 1
+            agentUpdated = False
+            if step_counter % update_frequency == 0 and len(agent.replay_buffer) > 1000:
+                agent.update_model()
+                agentUpdated = True
+            
+            if step_counter % target_update_frequency == 0:
+                agent.target_critic.load_state_dict(agent.critic.state_dict())
+                agent.target_critic.eval()
+                if agentUpdated:
+                    step_counter = 0
+            
 
         print(f"Episode={i}, reward={cumulative_reward}")
+
+        if i % 1000 == 0:
+            agent.save_checkpoint(f"checkpoints/episode_{i}.pth")
+            json.dump(rews, open(f"checkpoints/rews_{i}.json", "w"))
+
         rews.append(cumulative_reward)
         agent.update_model()
 
