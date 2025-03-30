@@ -11,15 +11,14 @@ gamma = 0.99
 class Agent():
     def __init__(self):
         self.actor = Actor()
-        self.critic = QCritic()
-        self.target_critic = QCritic()
+        self.critic = QCritic(input_dim=8, output_dim=1)
+        self.target_critic = QCritic(input_dim=8, output_dim=1)
         self.target_critic.load_state_dict(self.critic.state_dict())
         self.target_critic.eval()
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=1e-4)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=1e-4)
         self.replay_buffer = deque(maxlen=10000)
         self.alpha = 0.2
-        
     def decide_action(self, state):
         action_mean, act_std = self.actor(state).chunk(2, dim=-1)
         action_std = torch.clamp(act_std, min=-2, max=2)
@@ -72,6 +71,9 @@ class Agent():
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+
+        # Soft update target critic
+        self.soft_update()
 
     def save_checkpoint(self, filename):
         torch.save({

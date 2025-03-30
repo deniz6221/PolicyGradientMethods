@@ -147,7 +147,7 @@ class Hw3Env(environment.BaseEnv):
 
 
 if __name__ == "__main__":
-    env = Hw3Env(render_mode="offscreen")
+    env = Hw3Env(render_mode="none")
     agent = Agent()
     num_episodes = 10001
 
@@ -160,6 +160,7 @@ if __name__ == "__main__":
     for i in range(num_episodes):        
         env.reset()
         state = env.high_level_state()
+        state = torch.tensor(state, dtype=torch.float32)
         done = False
         cumulative_reward = 0.0
         episode_steps = 0
@@ -167,7 +168,8 @@ if __name__ == "__main__":
         while not done:
             action = agent.decide_action(state)
             next_state, reward, is_terminal, is_truncated = env.step(action[0])
-            
+            next_state = torch.tensor(next_state, dtype=torch.float32)
+            reward = torch.tensor(reward, dtype=torch.float32)
             cumulative_reward += reward
             done = is_terminal or is_truncated
             agent.replay_buffer.append((state, action, reward, next_state, done))
@@ -175,15 +177,9 @@ if __name__ == "__main__":
             state = next_state
             episode_steps += 1
             step_counter += 1
-            agentUpdated = False
             if step_counter % update_frequency == 0 and len(agent.replay_buffer) > 1000:
                 agent.update_model()
-                agentUpdated = True
             
-            if step_counter % target_update_frequency == 0:
-                agent.soft_update()
-                if agentUpdated:
-                    step_counter = 0
             
 
         print(f"Episode={i}, reward={cumulative_reward}")
@@ -193,7 +189,6 @@ if __name__ == "__main__":
             json.dump(rews, open(f"checkpoints/rews_{i}.json", "w"))
 
         rews.append(cumulative_reward)
-        agent.update_model()
 
     ## Save the model and the training statistics
     torch.save(agent.model.state_dict(), "model.pt")
