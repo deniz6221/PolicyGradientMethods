@@ -149,6 +149,7 @@ class Hw3Env(environment.BaseEnv):
 if __name__ == "__main__":
     env = Hw3Env(render_mode="none")
     agent = Agent()
+    agent.load_checkpoint("checkpoints/episode_1000.pth")
     num_episodes = 10001
 
     rews = []
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     target_update_frequency = 200
 
     step_counter = 0
-    for i in range(num_episodes):        
+    for i in range(1001, num_episodes):        
         env.reset()
         state = env.high_level_state()
         state = torch.tensor(state, dtype=torch.float32)
@@ -168,9 +169,9 @@ if __name__ == "__main__":
         while not done:
             action = agent.decide_action(state)
             next_state, reward, is_terminal, is_truncated = env.step(action[0])
+            cumulative_reward += reward
             next_state = torch.tensor(next_state, dtype=torch.float32)
             reward = torch.tensor(reward, dtype=torch.float32)
-            cumulative_reward += reward
             done = is_terminal or is_truncated
             agent.replay_buffer.append((state, action, reward, next_state, done))
             

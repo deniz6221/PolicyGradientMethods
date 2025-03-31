@@ -53,12 +53,16 @@ class Agent():
         next_states = torch.stack(next_states)
         dones = torch.tensor(dones, dtype=torch.float32)
 
+
+
         # Update critic
         with torch.no_grad():
             next_actions, next_log_probs = self.get_action_with_probs(next_states)
             target_q = self.target_critic(next_states, next_actions)
+            target_q = target_q.squeeze(-1)
             target_q = rewards + (1 - dones) * gamma * (target_q + self.alpha * next_log_probs)
         q = self.critic(states, actions)
+        q = q.squeeze(-1)
         critic_loss = F.mse_loss(q, target_q)
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
