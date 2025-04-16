@@ -12,6 +12,11 @@ class Actor(nn.Module):
             layers.append(nn.ReLU())
         layers.append(nn.Linear(hl[-1], act_dim*2))
         self.model = nn.Sequential(*layers)
+    
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.orthogonal_(m.weight, 1.0)
+            nn.init.constant_(m.bias, 0.0)
 
     def forward(self, x):
         return self.model(x)
@@ -19,17 +24,27 @@ class Actor(nn.Module):
 class QCritic(nn.Module):
     def __init__(self, input_dim, output_dim) -> None:
         super(QCritic, self).__init__()
-        self.model = nn.Sequential(
+        self.model_1 = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
-            nn.Linear(256, 512),
+            nn.Linear(256, 256),
             nn.ReLU(),
-            nn.Linear(512, 256),
+            nn.Linear(256, output_dim)
+        )
+        self.model_2 = nn.Sequential(
+            nn.Linear(input_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
             nn.ReLU(),
             nn.Linear(256, output_dim)
         )
 
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.orthogonal_(m.weight, 1.0)
+            nn.init.constant_(m.bias, 0.0)
+
     def forward(self, state, action):
         x = torch.cat([state, action], dim=-1)
-        return self.model(x)
+        return self.model_1(x), self.model_2(x)
     

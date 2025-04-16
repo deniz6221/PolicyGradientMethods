@@ -15,17 +15,18 @@ class Agent():
         self.target_critic = QCritic(input_dim=8, output_dim=1)
         self.target_critic.load_state_dict(self.critic.state_dict())
         self.target_critic.eval()
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=1e-4)
-        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=1e-4)
-        self.replay_buffer = deque(maxlen=10000)
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=3e-4)
+        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=3e-4)
+        self.replay_buffer = deque(maxlen=100000)
         self.alpha = 0.2
     def decide_action(self, state):
         action_mean, act_std = self.actor(state).chunk(2, dim=-1)
-        action_std = torch.clamp(act_std, min=-2, max=2)
+        action_std = torch.clamp(act_std, min=-20, max=2)
         action_std = torch.exp(action_std)
 
         dist = torch.distributions.Normal(action_mean, action_std)
         action = dist.sample()
+        action = torch.tanh(action)
 
         return action.detach()
     
@@ -35,17 +36,22 @@ class Agent():
         action_std = torch.exp(action_std)
 
         dist = torch.distributions.Normal(action_mean, action_std)
-        action = dist.rsample()
+        action_x = dist.rsample()
 
-        log_prob = dist.log_prob(action).sum(dim=-1)
-        return action.detach(), log_prob
+        action = torch.tanh(action_x)
+        
+
+        log_prob = dist.log_prob(action_x) - torch.log(1 - action.pow(2) + 1e-6)
+        log_prob = log_prob.sum(dim=-1, keepdim=True)
+
+        return action, log_prob
 
     
     def update_model(self):
         # Implement the soft actor critic update
         if len(self.replay_buffer) < 1000:
             return
-        batch = random.sample(self.replay_buffer, 64)
+        batch = random.sample(self.replay_buffer, 256)
         states, actions, rewards, next_states, dones = zip(*batch)
         states = torch.stack(states)
         actions = torch.stack(actions)
@@ -58,19 +64,23 @@ class Agent():
         # Update critic
         with torch.no_grad():
             next_actions, next_log_probs = self.get_action_with_probs(next_states)
-            target_q = self.target_critic(next_states, next_actions)
+            target_q1, target_q2 = self.target_critic(next_states, next_actions)
+            target_q = torch.min(target_q1, target_q2)
             target_q = target_q.squeeze(-1)
-            target_q = rewards + (1 - dones) * gamma * (target_q + self.alpha * next_log_probs)
-        q = self.critic(states, actions)
-        q = q.squeeze(-1)
-        critic_loss = F.mse_loss(q, target_q)
+            target_q = rewards + (1 - dones) * gamma * (target_q - self.alpha * next_log_probs)
+        q_1, q_2 = self.critic(states, actions)
+        q_1 = q_1.squeeze(-1)
+        q_2 = q_2.squeeze(-1)
+        critic_loss = F.mse_loss(q_1, target_q) + F.mse_loss(q_2, target_q)
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
 
         # Update actor
         actions, log_probs = self.get_action_with_probs(states)
-        q = self.critic(states, actions)
+        q1,q2 = self.critic(states, actions)
+        q = torch.min(q1, q2)
+        q = q.squeeze(-1)
         actor_loss = (self.alpha * log_probs - q).mean()
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
