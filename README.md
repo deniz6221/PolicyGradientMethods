@@ -11,7 +11,11 @@ The trained model can be found in REINFORCE/checkpoints/checkpoint_4995.pth
 ### Soft Actor Critic
 
 I used one of the first SAC algorithms to train the model. The algorithm tries to maximize entropy and reward while trying to minimize the difference between target and evaluated Q values. I kept the entropy temperature alpha constant (0.2),
-the better way to do it is to make the algorithm learn alpha but I did not implement it. The training was successful after 5000 episodes. The reward plot can be found at SoftActorCritic/Reward_Plot.png
+the better way to do it is to make the algorithm learn alpha but I did not implement it. The training was successful after 5000 episodes. The reward plot can be found at SoftActorCritic/Reward_Plot.png \
+The model performs good under most cases, here are some harder ones with successful outcomes: \
+<img src="https://github.com/deniz6221/PolicyGradientMethods/raw/main/SoftActorCritic/gifs/SAC_1.gif" alt="SAC1" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
+<img src="https://github.com/deniz6221/PolicyGradientMethods/raw/main/SoftActorCritic/gifs/SAC_2.gif" alt="SAC1" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
+<img src="https://github.com/deniz6221/PolicyGradientMethods/raw/main/SoftActorCritic/gifs/SAC_3.gif" alt="SAC1" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
 
 ### How To Use The Models
 
