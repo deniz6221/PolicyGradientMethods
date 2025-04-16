@@ -11,8 +11,9 @@ The trained model can be found in REINFORCE/checkpoints/checkpoint_4995.pth
 ### Soft Actor Critic
 
 I used one of the first SAC algorithms to train the model. The algorithm tries to maximize entropy and reward while trying to minimize the difference between target and evaluated Q values. I kept the entropy temperature alpha constant (0.2),
-the better way to do it is to make the algorithm learn alpha but I did not implement it. The training once again crashed but at 6000+ episodes due to exploding gradients. The plot can be found in SoftActorCritic/Reward_Plot.png
-The trained model can be found in SoftActorCritic/checkpoints/checkpoint_6000.pth
+the better way to do it is to make the algorithm learn alpha but I did not implement it. The training was successfull after 5000 episodes. The reward plot can be found at SoftActorCritic/Reward_Plot.png
 
 ### How To Use The Models
-The checkpoint files contain both the optimizer and model state dictionaries. To use the models, one must load the file into memory as a dictionary and get the models from the dictionary.
+
+To test the SAC model, run `python3 SoftActorCritic/test_model.py` \
+To train the SAC model, run `python3 SoftActorCritic/homework3.py`
