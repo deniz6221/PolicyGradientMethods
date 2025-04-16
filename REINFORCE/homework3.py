@@ -4,7 +4,7 @@ import numpy as np
 import json
 import environment
 from agent import Agent
-
+import threading
 
 class Hw3Env(environment.BaseEnv):
     def __init__(self, **kwargs) -> None:
@@ -145,14 +145,26 @@ class Hw3Env(environment.BaseEnv):
     #     return state, reward, terminal, truncated
 
 
+save_status = False
+def saver_thread():
+    global save_status
+    while True:
+        key = input()
+        if key == "s":
+            save_status = True
+
 if __name__ == "__main__":
+    saver = threading.Thread(target=saver_thread)
+    saver.daemon = True
+    saver.start()
+
     env = Hw3Env(render_mode="none")
     agent = Agent()
     num_episodes = 10000
 
     rews = []
 
-    for i in range(num_episodes):        
+    for i in range(1, num_episodes +1):        
         env.reset()
         state = env.high_level_state()
         state = torch.tensor(state, dtype=torch.float32)
@@ -162,7 +174,7 @@ if __name__ == "__main__":
 
         while not done:
             action = agent.decide_action(state.clone())
-            next_state, reward, is_terminal, is_truncated = env.step(action[0])
+            next_state, reward, is_terminal, is_truncated = env.step(action)
             next_state = torch.tensor(next_state, dtype=torch.float32)
             agent.add_reward(reward)
             cumulative_reward += reward
@@ -176,9 +188,15 @@ if __name__ == "__main__":
         agent.update_model()
 
         if i % 999 == 0:
-            torch.save({"model": agent.model.state_dict(), "optim": agent.optimizer.state_dict()}, f"checkpoints/checkpoint_{i}.pth")
-            with open(f"checkpoints/rewjson_{i}.json", "w") as rjson:
+            agent.save_checkpoint(f"checkpoints/episode_new_{i}.pth")
+            with open(f"checkpoints/rews_new_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
+
+        if save_status:
+            agent.save_checkpoint(f"checkpoints/episode_new_{i}.pth")
+            with open(f"checkpoints/rews_new_{i}.json", "w") as rjson:
+                rjson.write(json.dumps(rews))
+            save_status = False
 
     ## Save the model and the training statistics
     torch.save(agent.model.state_dict(), "model.pt")
