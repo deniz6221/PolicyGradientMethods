@@ -145,6 +145,27 @@ class Hw3Env(environment.BaseEnv):
     #     return state, reward, terminal, truncated
 
 
+def custom_reward(states):
+    current_dist_ee_obj = np.linalg.norm(states[0] - states[1])
+    current_dist_obj_goal = np.linalg.norm(states[1] - states[2])
+
+    next_dist_ee_obj = np.linalg.norm(states[3] - states[4])
+    next_dist_obj_goal = np.linalg.norm(states[4] - states[5])
+
+    ee_obj_progress = current_dist_ee_obj - next_dist_ee_obj
+    obj_goal_progress = current_dist_obj_goal - next_dist_obj_goal
+
+
+    ee_obj_reward = ee_obj_progress * 5.0
+
+    obj_goal_reward = obj_goal_progress * 10.0
+
+    goal_reward = 0.5 if next_dist_obj_goal < 0.01 else 0.0
+
+    reward = (ee_obj_reward + obj_goal_reward + goal_reward) * 100
+    return float(reward)
+
+
 save_status = False
 def saver_thread():
     global save_status
@@ -174,8 +195,10 @@ if __name__ == "__main__":
 
         while not done:
             action = agent.decide_action(state.clone())
-            next_state, reward, is_terminal, is_truncated = env.step(action)
+            next_state, _, is_terminal, is_truncated = env.step(action)
             next_state = torch.tensor(next_state, dtype=torch.float32)
+            reward = custom_reward([np.array(state[:2]), np.array(state[2:4]), np.array(state[4:6]), 
+                                    np.array(next_state[:2]), np.array(next_state[2:4]), np.array(next_state[4:6])])
             agent.add_reward(reward)
             cumulative_reward += reward
             done = is_terminal or is_truncated
@@ -187,14 +210,14 @@ if __name__ == "__main__":
         rews.append(cumulative_reward)
         agent.update_model()
 
-        if i % 999 == 0:
-            agent.save_checkpoint(f"checkpoints/episode_new_{i}.pth")
-            with open(f"checkpoints/rews_new_{i}.json", "w") as rjson:
+        if i % 1000 == 0:
+            agent.save_checkpoint(f"checkpoints/episode_cst_{i}.pth")
+            with open(f"checkpoints/rews_cst_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
 
         if save_status:
-            agent.save_checkpoint(f"checkpoints/episode_new_{i}.pth")
-            with open(f"checkpoints/rews_new_{i}.json", "w") as rjson:
+            agent.save_checkpoint(f"checkpoints/episode_cst_{i}.pth")
+            with open(f"checkpoints/rews_cst_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
             save_status = False
 

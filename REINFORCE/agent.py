@@ -54,7 +54,7 @@ class Agent():
             returns = returns / (returns_std + 1e-5) """
         
         if returns.std() < 1e-6:
-            returns = returns - returns.mean()  # zero-center only
+            returns = returns - returns.mean()  
         else:
             returns = (returns - returns.mean()) / (returns.std() + 1e-5)
 
