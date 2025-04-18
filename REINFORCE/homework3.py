@@ -174,18 +174,28 @@ def saver_thread():
         if key == "s":
             save_status = True
 
+
+
 if __name__ == "__main__":
+    load_checkpoint = -1
+
+    start_ind = load_checkpoint + 1 if load_checkpoint > 0 else 1
+
     saver = threading.Thread(target=saver_thread)
     saver.daemon = True
     saver.start()
 
     env = Hw3Env(render_mode="none")
     agent = Agent()
+    if load_checkpoint > 0:
+        agent.load_checkpoint(f"checkpoints/episode_new_{load_checkpoint}.pth")
     num_episodes = 10000
 
     rews = []
 
-    for i in range(1, num_episodes +1):        
+    
+
+    for i in range(start_ind, num_episodes +1):        
         env.reset()
         state = env.high_level_state()
         state = torch.tensor(state, dtype=torch.float32)
@@ -195,10 +205,12 @@ if __name__ == "__main__":
 
         while not done:
             action = agent.decide_action(state.clone())
-            next_state, _, is_terminal, is_truncated = env.step(action)
+            next_state, reward, is_terminal, is_truncated = env.step(action)
             next_state = torch.tensor(next_state, dtype=torch.float32)
-            reward = custom_reward([np.array(state[:2]), np.array(state[2:4]), np.array(state[4:6]), 
-                                    np.array(next_state[:2]), np.array(next_state[2:4]), np.array(next_state[4:6])])
+
+            #reward = custom_reward([np.array(state[:2]), np.array(state[2:4]), np.array(state[4:6]), 
+            #                        np.array(next_state[:2]), np.array(next_state[2:4]), np.array(next_state[4:6])])
+
             agent.add_reward(reward)
             cumulative_reward += reward
             done = is_terminal or is_truncated
@@ -211,13 +223,13 @@ if __name__ == "__main__":
         agent.update_model()
 
         if i % 1000 == 0:
-            agent.save_checkpoint(f"checkpoints/episode_cst_{i}.pth")
-            with open(f"checkpoints/rews_cst_{i}.json", "w") as rjson:
+            agent.save_checkpoint(f"checkpoints/episode_adv_{i}.pth")
+            with open(f"checkpoints/rews_adv_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
 
         if save_status:
-            agent.save_checkpoint(f"checkpoints/episode_cst_{i}.pth")
-            with open(f"checkpoints/rews_cst_{i}.json", "w") as rjson:
+            agent.save_checkpoint(f"checkpoints/episode_adv_{i}.pth")
+            with open(f"checkpoints/rews_adv_{i}.json", "w") as rjson:
                 rjson.write(json.dumps(rews))
             save_status = False
 
