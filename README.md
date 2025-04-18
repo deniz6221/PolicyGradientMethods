@@ -3,10 +3,9 @@
 This project implements REINFORCE and Soft Actor Critic (SAC) algorithms to make a robot learn how to push an object to the goal position.
 
 ### REINFORCE
-My goal was to train the model for 10000 episodes, however the rewards being disproportional caused exploding gradients and that made training impossible with high learning rates.
-I tried gradient clipping and other methods to keep the gradient in check but none of them worked, only solution was to lower the learning rate. I tried several learning rates by halfing them when they fail, the best one was 5e-6.
-However it also failed after 5000+ episodes, I didn't bother to lower the learning rate more since the learning became quite inefficient with such low rates. The reward/iteration plot after 4998 episodes can be found in REINFORCE/Reward_Plot.png
-The trained model can be found in REINFORCE/checkpoints/checkpoint_4995.pth
+My goal was to train the model for 10000 episodes, however the rewwards never improved so I killed the training after 7000 episodes.
+The reward/iteration plot after 7002 episodes can be found in REINFORCE/Reward_Plot_New.png
+The trained model can be found in REINFORCE/checkpoints/checkpoint_new_7002.pth
 
 ### Soft Actor Critic
 
