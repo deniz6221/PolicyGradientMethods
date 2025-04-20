@@ -4,7 +4,7 @@ This project implements REINFORCE and Soft Actor Critic (SAC) algorithms to make
 
 ### REINFORCE
 My goal was to train the model for 10000 episodes, however the rewards never improved so I killed the training after 7000 episodes.
-The reward/iteration plot after 7002 episodes can be found in REINFORCE/Reward_Plot_New.png
+The reward/iteration plot after 7002 episodes can be found in REINFORCE/Reward_Plot_New.png and the previous training reward plot can be found REINFORCE/Reward_Plot.png \
 The trained model can be found in REINFORCE/checkpoints/checkpoint_new_7002.pth
 
 ### Soft Actor Critic
