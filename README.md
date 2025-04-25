@@ -5,7 +5,7 @@ This project implements REINFORCE and Soft Actor Critic (SAC) algorithms to make
 ### REINFORCE
 I used the gym enviroment with Pusher-v5 for faster training. The algorithm calculates a baseline using weighted averages of returns. I tried the algorithm many times but it did not train well without some weight initializations. Using kaiming_normal_ and xavier_normal_ somehow worked and the latest training worked. The smoothened reward plot can be seen here: \
 <img src="https://github.com/deniz6221/PolicyGradientMethods/blob/main/REINFORCE/Gym_Env/Reward_Plot.png" alt="REINFORCE_RPLT" style="max-width: 100%; display: inline-block;" width="800px"> \
-The model performs well under most cases but there are a few edge cases where it fails. Here are some cases with successful outcomes:
+The model performs well under most cases but there are a few edge cases where it fails. Here are some cases with successful outcomes: \
 <img src="https://github.com/deniz6221/PolicyGradientMethods/blob/main/REINFORCE/Gym_Env/gifs/R_1.gif" alt="REINFORCE1" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
 <img src="https://github.com/deniz6221/PolicyGradientMethods/blob/main/REINFORCE/Gym_Env/gifs/R_2.gif" alt="REINFORCE2" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
 <img src="https://github.com/deniz6221/PolicyGradientMethods/blob/main/REINFORCE/Gym_Env/gifs/R_3.gif" alt="REINFORCE3" style="max-width: 100%; display: inline-block;" data-target="animated-image.originalImage" width="300px">
