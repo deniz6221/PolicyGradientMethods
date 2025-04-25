@@ -24,9 +24,9 @@ The model performs good under most cases, here are some harder ones with success
 
 #### REINFORCE
 CD to REINFORCE directory with `cd REINFORCE/Gym_Env` \
-To train the REINFORCE model, call the `train()` function from the main.py file \
-To train the REINFORCE model, call the `test()` function from the main.py file
+To train a REINFORCE model, call the `train()` function from the main.py file \
+To test the trained REINFORCE model, call the `test()` function from the main.py file
 #### SAC
 CD to SAC directory with `cd SoftActorCritic` \
-To test the SAC model, run `python3 test_model.py` \
-To train the SAC model, run `python3 homework3.py`
+To test the trained SAC model, run `python3 test_model.py` \
+To train a SAC model, run `python3 homework3.py`
